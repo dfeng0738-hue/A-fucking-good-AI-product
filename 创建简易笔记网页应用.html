@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的简易笔记 (带时间戳)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        textarea { padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-height: 80px; }
+        button#add-btn { padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button#add-btn:hover { background-color: #0056b3; }
+        .notes-list { list-style: none; padding: 0; }
+        .note-item { background: #fff; border-left: 5px solid #007bff; margin-bottom: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .note-text { word-break: break-all; white-space: pre-wrap; margin-bottom: 10px; }
+        .note-footer { display: flex; justify-content: space-between; align-items: center; }
+        .note-time { font-size: 12px; color: #888; font-style: italic; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📝 我的笔记</h2>
+    <div class="input-group">
+        <textarea id="note-input" placeholder="输入笔记..."></textarea>
+        <button id="add-btn">保存笔记</button>
+    </div>
+    <ul id="notes-list" class="notes-list"></ul>
+</div>
+<script>
+    const noteInput = document.getElementById('note-input');
+    const addBtn = document.getElementById('add-btn');
+    const notesList = document.getElementById('notes-list');
+    document.addEventListener('DOMContentLoaded', displayNotes);
+    addBtn.addEventListener('click', () => {
+        const content = noteInput.value.trim();
+        if (!content) return alert("请输入内容");
+        const now = new Date();
+        const timeString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        const notes = getNotesFromStorage();
+        notes.push({ text: content, time: timeString });
+        localStorage.setItem('myTimestampNotes', JSON.stringify(notes));
+        noteInput.value = "";
+        displayNotes();
+    });
+    function getNotesFromStorage() {
+        const stored = localStorage.getItem('myTimestampNotes');
+        return stored ? JSON.parse(stored) : [];
+    }
+    function displayNotes() {
+        const notes = getNotesFromStorage();
+        notesList.innerHTML = "";
+        notes.slice().reverse().forEach((note, index) => {
+            const li = document.createElement('li');
+            li.classList.add('note-item');
+            li.innerHTML = `
+                <div class="note-text">${note.text}</div>
+                <div class="note-footer">
+                    <span class="note-time">🕒 保存于: ${note.time}</span>
+                    <button class="delete-btn" onclick="deleteNote(${notes.length - 1 - index})">删除</button>
+                </div>`;
+            notesList.appendChild(li);
+        });
+    }
+    function deleteNote(index) {
+        const notes = getNotesFromStorage();
+        notes.splice(index, 1);
+        localStorage.setItem('myTimestampNotes', JSON.stringify(notes));
+        displayNotes();
+    }
+</script>
+</body>
+</html>
